@@ -226,3 +226,25 @@ h4 { margin: 16px 0 4px; font-size: 15px; }
 .dash-row-date { font-size: 17px; font-weight: 600; }
 .dash-row-meta { font-size: 14px; color: var(--muted); margin-top: 3px; }
 .dash-row-amt { font-size: 20px; font-weight: 700; white-space: nowrap; }
+
+/* Shift form: presets, times, paid hours */
+.presets { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 2px; }
+.preset { border-radius: 16px; padding: 7px 11px; min-height: 36px; font-size: 14px; }
+.preset .preset-time { opacity: 0.75; margin-left: 2px; }
+.preset.on { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+.preset.preset-ot.on { background: var(--heat-ot); border-color: var(--heat-ot); color: #1c1c1e; }
+.times { display: grid; grid-template-columns: 1fr 1fr; gap: 0 8px; }
+.paid-box { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--tile); border-radius: 12px; padding: 10px 12px; margin-top: 12px; }
+.paid-box > span { display: flex; flex-direction: column; }
+.paid-label { font-weight: 600; }
+.paid-box input { width: 96px; text-align: right; font: inherit; font-size: 18px; font-weight: 700; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--text); min-height: 44px; }
+.preset-edit { border-top: 1px solid var(--line); padding-top: 6px; }
+
+/* Shift card rows: label | hours | dollars */
+.shift-detail-times { color: var(--muted); font-size: 14px; margin: 0 0 6px; }
+.shift-lines td.h { color: var(--muted); width: 64px; }
+.shift-lines tr.sum td { font-weight: 700; border-bottom: 0; padding-top: 7px; }
+.shift-lines tr.sum + tr.sum td { padding-top: 2px; }
+.shift-lines tr.net td { color: var(--accent); }
+.times > * { min-width: 0; }
+.times .field-input input { width: 100%; }

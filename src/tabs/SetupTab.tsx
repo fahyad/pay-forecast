@@ -1,8 +1,8 @@
 import { useState } from 'preact/hooks'
 import type { ComponentChildren } from 'preact'
 import { addDays } from '../engine/schedule'
-import type { Bracket, NamedAmount, PayPeriod, Settings, TaxYear } from '../engine/types'
-import { DateField, MoneyField, NumberField, PercentField, TextField, Toggle } from '../components/fields'
+import type { Bracket, NamedAmount, PayPeriod, Settings, ShiftPreset, TaxYear } from '../engine/types'
+import { DateField, MoneyField, NumberField, PercentField, TextField, TimeField, Toggle } from '../components/fields'
 import { fmtDate } from '../format'
 import { type AppData, exportBackup, readBackupFile } from '../store'
 
@@ -26,6 +26,7 @@ export function SetupTab({ data, onSettings, onReplaceAll }: Props) {
   const set = <K extends keyof Settings>(key: K, value: Settings[K]) => onSettings({ ...s, [key]: value })
   const pay = s.pay
   const setPay = (k: keyof typeof pay, v: number) => set('pay', { ...pay, [k]: v })
+  const setPayAny = <K extends keyof typeof pay>(k: K, v: (typeof pay)[K]) => set('pay', { ...pay, [k]: v })
   const d = s.deductions
   const setDed = <K extends keyof typeof d>(k: K, v: (typeof d)[K]) => set('deductions', { ...d, [k]: v })
 
@@ -39,10 +40,26 @@ export function SetupTab({ data, onSettings, onReplaceAll }: Props) {
         <NumberField label="Overtime multiplier" value={pay.otMultiplier} onChange={(v) => setPay('otMultiplier', v)} suffix="x" />
         <NumberField label="Stat worked premium" value={pay.statPremium} onChange={(v) => setPay('statPremium', v)} suffix="x" hint="On top of 1x base for hours on a stat" />
         <NumberField label="Double-stat premium" value={pay.statPremiumDouble} onChange={(v) => setPay('statPremiumDouble', v)} suffix="x" hint="For stats marked 2.0x (e.g. Christmas)" />
+        <NumberField label="Default hours for a new shift" value={pay.defaultShiftHours} onChange={(v) => setPay('defaultShiftHours', v)} suffix="h" />
+      </Section>
+
+      <Section title="Shift times & presets">
+        <p class="fine">Premium windows from the collective agreement. Shifts with start and end times are paid by these.</p>
+        <div class="times">
+          <TimeField label="Evening diff from" value={pay.eveningWindow.start} onChange={(v) => setPayAny('eveningWindow', { ...pay.eveningWindow, start: v })} />
+          <TimeField label="to" value={pay.eveningWindow.end} onChange={(v) => setPayAny('eveningWindow', { ...pay.eveningWindow, end: v })} />
+          <TimeField label="Night diff from" value={pay.nightWindow.start} onChange={(v) => setPayAny('nightWindow', { ...pay.nightWindow, start: v })} />
+          <TimeField label="to" value={pay.nightWindow.end} onChange={(v) => setPayAny('nightWindow', { ...pay.nightWindow, end: v })} />
+          <TimeField label="Weekend starts Friday at" value={pay.weekendStart} onChange={(v) => setPayAny('weekendStart', v)} />
+          <NumberField label="and lasts" value={pay.weekendHours} onChange={(v) => setPay('weekendHours', v)} suffix="h" />
+        </div>
+        <NumberField label="Paid hours for a 12-hour regular shift" value={pay.twelveHourPaid} onChange={(v) => setPay('twelveHourPaid', v)} suffix="h" hint="Overtime pays every clock hour" />
+        <h4>Presets on the shift form</h4>
+        <PresetList presets={pay.shiftPresets} onChange={(v) => setPayAny('shiftPresets', v)} />
+        <h4>For shifts without times</h4>
         <NumberField label="Evening-premium hours per day shift" value={pay.eveningHoursPerDayShift} onChange={(v) => setPay('eveningHoursPerDayShift', v)} suffix="h" />
         <NumberField label="Weekend hours on a Friday day shift" value={pay.fridayDayWeekendHours} onChange={(v) => setPay('fridayDayWeekendHours', v)} suffix="h" />
         <NumberField label="Night shift hours before midnight" value={pay.nightHoursBeforeMidnight} onChange={(v) => setPay('nightHoursBeforeMidnight', v)} suffix="h" hint="Splits stat pay for night shifts at midnight" />
-        <NumberField label="Default hours for a new shift" value={pay.defaultShiftHours} onChange={(v) => setPay('defaultShiftHours', v)} suffix="h" />
       </Section>
 
       <Section title="Deductions">
@@ -259,6 +276,28 @@ function BackupPanel({ data, onReplaceAll }: { data: AppData; onReplaceAll: (d: 
         }} />
       </label>
       {msg && <p class="fine">{msg}</p>}
+    </div>
+  )
+}
+
+function PresetList({ presets, onChange }: { presets: ShiftPreset[]; onChange: (p: ShiftPreset[]) => void }) {
+  const update = (i: number, patch: Partial<ShiftPreset>) => onChange(presets.map((x, j) => (j === i ? { ...x, ...patch } : x)))
+  return (
+    <div class="list">
+      {presets.map((x, i) => (
+        <div class="preset-edit" key={i}>
+          <div class="list-row">
+            <TextField label="Name" value={x.name} onChange={(name) => update(i, { name })} />
+            <button class="icon danger" aria-label={`Remove ${x.name}`} onClick={() => onChange(presets.filter((_, j) => j !== i))}>×</button>
+          </div>
+          <div class="times">
+            <TimeField label="Start" value={x.start} onChange={(start) => update(i, { start })} />
+            <TimeField label="End" value={x.end} onChange={(end) => update(i, { end })} />
+          </div>
+          <Toggle label="Overtime" checked={x.ot} onChange={(ot) => update(i, { ot })} />
+        </div>
+      ))}
+      <button onClick={() => onChange([...presets, { name: 'New', start: '07:00', end: '15:00', ot: false }])}>+ Add preset</button>
     </div>
   )
 }

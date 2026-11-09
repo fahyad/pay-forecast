@@ -33,21 +33,31 @@ describe('calendar grid', () => {
 })
 
 describe('shift details', () => {
-  it('shows type, paid hours, premiums, stat split and pay date', () => {
+  it('shows type and hours, then label | hours | dollars rows, gross and net', () => {
     const t = text(renderToString(<ShiftDetail shift={night} shifts={[night]} settings={settings} onEdit={() => {}} onDelete={() => {}} />))
-    expect(t).toContain('Night shift')
-    expect(t).toContain('12.00 paid hours')
-    expect(t).toContain('Night differential hours 12.00')
-    expect(t).toContain('Weekend premium hours 12.00') // Friday night
-    expect(t).toContain('Stat hours (0.5x premium) 5.00') // only the hours before midnight
-    expect(t).toContain('paid Mar 25, 2026')
-    // 12 x 40 base + 12 x 4 night + 12 x 3 weekend + 5 x 20 stat premium = 480 + 48 + 36 + 100
-    expect(t).toContain('$664.00')
+    expect(t).toContain('Night shift 12.00 h')
+    expect(t).toContain('Base 12.00 $480')
+    expect(t).toContain('Night diff 12.00 $48')
+    expect(t).toContain('Weekend premium 12.00 $36') // Friday night
+    expect(t).toContain('Stat premium 5.00 $100') // only the hours before midnight
+    expect(t).toContain('Gross (approx.) $664') // 480 + 48 + 36 + 100
+    expect(t).toMatch(/Net \(approx\.\) \$[\d,]+/)
+    expect(t).not.toContain('paid hours')
   })
 
-  it('marks overtime', () => {
-    const t = text(renderToString(<ShiftDetail shift={{ ...night, ot: true }} shifts={[{ ...night, ot: true }]} settings={settings} onEdit={() => {}} onDelete={() => {}} />))
+  it('marks overtime and shows the OT rate row', () => {
+    const ot = { ...night, ot: true }
+    const t = text(renderToString(<ShiftDetail shift={ot} shifts={[ot]} settings={settings} onEdit={() => {}} onDelete={() => {}} />))
     expect(t).toContain('Overtime')
-    expect(t).toContain('Overtime hours 12.00')
+    expect(t).toContain('OT 2x 12.00 $960')
+  })
+
+  it('a shift with times shows them and is paid by the clock', () => {
+    const timed: Shift = { id: 't', date: '2026-03-13', type: 'day', hours: 8, ot: true, start: '07:00', end: '15:00' }
+    const t = text(renderToString(<ShiftDetail shift={timed} shifts={[timed]} settings={settings} onEdit={() => {}} onDelete={() => {}} />))
+    expect(t).toContain('07:00–15:00')
+    expect(t).toContain('OT 2x 8.00 $640')
+    expect(t).not.toContain('Weekend premium') // a Friday shift ending at 15:00 earns none
+    expect(t).toContain('Gross (approx.) $640')
   })
 })

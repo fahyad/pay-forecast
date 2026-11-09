@@ -84,3 +84,15 @@ export function Toggle(p: { label: string; checked: boolean; onChange: (v: boole
     </label>
   )
 }
+
+export function TimeField(p: { label: string; value: string; onChange: (v: string) => void; hint?: string }) {
+  return (
+    <label class="field">
+      <span class="field-label">{p.label}</span>
+      <span class="field-input">
+        <input type="time" step={900} value={p.value} onInput={(e) => p.onChange((e.target as HTMLInputElement).value)} />
+      </span>
+      {p.hint && <span class="field-hint">{p.hint}</span>}
+    </label>
+  )
+}

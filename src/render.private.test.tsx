@@ -41,9 +41,9 @@ describe.skipIf(!raw)('private render check', () => {
     }
     for (const s of data!.shifts) {
       const t = text(renderToString(<ShiftDetail shift={s} shifts={data!.shifts} settings={data!.settings} onEdit={() => {}} onDelete={() => {}} />))
-      expect(t).toContain(`${fmtHours(s.hours)} paid hours`)
-      expect(t).toMatch(/paid [A-Z][a-z]{2} \d+, \d{4}/)
-      expect(t).toMatch(/Adds to net pay \((approx\.|estimate)\) \$/)
+      expect(t).toContain(`${fmtHours(s.hours)} h`)
+      expect(t).toMatch(/Gross \(approx\.\) \$[\d,]+/)
+      expect(t).toMatch(/Net \((approx\.|estimate)\) \$[\d,]+/)
     }
   })
 
