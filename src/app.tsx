@@ -7,10 +7,10 @@ import { ScheduleTab } from './tabs/ScheduleTab'
 import { SetupTab } from './tabs/SetupTab'
 
 type Tab = 'schedule' | 'pay' | 'setup'
-const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: 'schedule', label: 'Schedule', icon: '📅' },
-  { id: 'pay', label: 'Pay', icon: '💵' },
-  { id: 'setup', label: 'Setup', icon: '⚙️' },
+const TABS: { id: Tab; label: string }[] = [
+  { id: 'schedule', label: 'Schedule' },
+  { id: 'pay', label: 'Pay' },
+  { id: 'setup', label: 'Setup' },
 ]
 
 export function App() {
@@ -58,7 +58,6 @@ export function App() {
       <nav class="tabbar">
         {TABS.map((t) => (
           <button key={t.id} class={tab === t.id ? 'active' : ''} onClick={() => setTab(t.id)} aria-current={tab === t.id}>
-            <span class="tab-icon" aria-hidden="true">{t.icon}</span>
             {t.label}
           </button>
         ))}
