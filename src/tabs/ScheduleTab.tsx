@@ -186,8 +186,10 @@ export function ShiftDetail({ shift, shifts, settings, onEdit, onDelete }: {
         </span>
         <span class="shift-detail-hours">{fmtHours(shift.hours)} h</span>
       </div>
-      {shift.start && shift.end && (
+      {shift.start && shift.end ? (
         <p class="shift-detail-times">{shift.start}–{shift.end}{nextDay ? ' (next day)' : ''}</p>
+      ) : (
+        WORKED.has(shift.type) && <p class="shift-detail-times unset">Times not set — tap Edit to add them</p>
       )}
       <table class="lines shift-lines">
         <tbody>

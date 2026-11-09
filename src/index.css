@@ -117,23 +117,22 @@ button:disabled { opacity: 0.45; }
 .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .cal-head .icon { border: 0; background: none; font-size: 28px; color: var(--accent); }
 .cal-title { border: 0; background: none; font-size: 18px; font-weight: 700; }
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
-.cal-weekday { text-align: center; font-size: 12px; color: var(--muted); padding: 2px 0 4px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.cal-weekday { text-align: center; font-size: 12px; color: var(--muted); padding: 2px 0 3px; }
 .cal-day {
   position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-  gap: 3px; min-height: 54px; padding: 4px 1px; border: 0; border-radius: 10px; background: var(--bg); font-size: 14px;
+  gap: 1px; min-height: 42px; padding: 2px 0 3px; border: 0; border-radius: 8px; background: var(--bg); font-size: 14px;
 }
 .cal-day.other { opacity: 0.4; }
 .cal-day.today .cal-num { background: var(--accent); color: var(--accent-text); border-radius: 50%; }
 .cal-day.selected { outline: 2px solid var(--accent); outline-offset: -2px; }
 .cal-day.stat::after {
-  content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #d4a017;
+  content: 'S'; position: absolute; top: 1px; right: 4px; font-size: 10px; font-weight: 800; line-height: 1; color: var(--ot);
 }
-.cal-day.stat::after { position: absolute; top: 5px; right: 5px; }
-.cal-num { width: 24px; height: 24px; line-height: 24px; text-align: center; font-weight: 500; }
+.cal-num { width: 22px; height: 22px; line-height: 22px; text-align: center; font-weight: 500; }
 .cal-chips { display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; }
-.cal-pay { color: var(--accent); font-weight: 700; font-size: 11px; }
-.cal-pay { position: absolute; top: 3px; left: 5px; }
+.cal-pay { color: var(--accent); font-weight: 700; font-size: 10px; line-height: 1; }
+.cal-pay { position: absolute; top: 2px; left: 4px; }
 
 .chip {
   display: inline-block; min-width: 20px; padding: 1px 4px; border-radius: 6px; font-size: 11px; font-weight: 700;
@@ -241,7 +240,8 @@ h4 { margin: 16px 0 4px; font-size: 15px; }
 .preset-edit { border-top: 1px solid var(--line); padding-top: 6px; }
 
 /* Shift card rows: label | hours | dollars */
-.shift-detail-times { color: var(--muted); font-size: 14px; margin: 0 0 6px; }
+.shift-detail-times { font-size: 15px; font-weight: 500; margin: 0 0 6px; }
+.shift-detail-times.unset { color: var(--muted); font-weight: 400; font-size: 14px; }
 .shift-lines td.h { color: var(--muted); width: 64px; }
 .shift-lines tr.sum td { font-weight: 700; border-bottom: 0; padding-top: 7px; }
 .shift-lines tr.sum + tr.sum td { padding-top: 2px; }
