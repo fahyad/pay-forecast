@@ -1,4 +1,5 @@
 // Shifts -> per-period earnings lines (the sheet's Work Schedule columns H:N, summed per pay date).
+import { clockPremiums } from './clock'
 import { toHundredths } from './money'
 import type { EarningsLine, LeaveShiftType, PayPeriod, PayRules, PeriodInput, Shift, StatHoliday } from './types'
 
@@ -46,6 +47,28 @@ export function shiftHours(shift: Shift, pay: PayRules, stats: StatHoliday[]): S
     out.leave[shift.type] = h
     return out
   }
+
+  // With clock times: premiums and stat hours by the collective agreement's rules.
+  if (shift.start && shift.end) {
+    const c = clockPremiums(shift.date, shift.start, shift.end, shift.ot, h, pay, stats)
+    let statHours = 0
+    for (const st of c.stats) {
+      if (st.double) out.statPremiumDouble += st.hours
+      else out.statPremium += st.hours
+      statHours += st.hours
+    }
+    if (shift.ot) out.ot = h
+    else {
+      out.statWorked = statHours
+      out.regular = h - statHours
+    }
+    out.evening = c.evening
+    out.night = c.night
+    out.weekend = c.weekend
+    return out
+  }
+
+  // Without times: estimates from the shift type.
 
   const statOn = (date: string) => stats.find((s) => s.date === date)
   const addStat = (date: string, hours: number) => {

@@ -51,9 +51,13 @@ export function parseData(raw: unknown): AppData {
     throw new Error('The backup is missing part of its Setup.')
   }
   if (!Array.isArray(d.shifts)) throw new Error('The backup has no shift list.')
+  // Settings added after the first release get their defaults when missing.
+  const settings: Settings = { ...(s as Settings), pay: { ...DEFAULT_SETTINGS.pay, ...(s as Settings).pay } }
   const bad = d.shifts.find((x) => !/^\d{4}-\d{2}-\d{2}$/.test(x?.date) || typeof x.hours !== 'number' || !x.type)
   if (bad) throw new Error(`A shift in the backup is not valid: ${JSON.stringify(bad)}`)
-  return { app: 'pay-forecast', version: 1, settings: s as Settings, shifts: d.shifts as Shift[] }
+  const badTime = d.shifts.find((x) => (x.start !== undefined || x.end !== undefined) && !(/^\d{2}:\d{2}$/.test(x.start ?? '') && /^\d{2}:\d{2}$/.test(x.end ?? '')))
+  if (badTime) throw new Error(`A shift in the backup has an invalid start/end time: ${JSON.stringify(badTime)}`)
+  return { app: 'pay-forecast', version: 1, settings, shifts: d.shifts as Shift[] }
 }
 
 export function backupFileName(today = new Date()): string {

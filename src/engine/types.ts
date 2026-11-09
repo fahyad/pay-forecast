@@ -17,6 +17,24 @@ export interface Shift {
   hours: number
   /** Overtime: paid at the OT multiplier instead of the base rate; not pensionable. */
   ot: boolean
+  /** Clock times "HH:MM" (24 h). When both are set, premiums are worked out by the clock;
+   *  an end at or before the start means the shift runs past midnight. */
+  start?: string
+  end?: string
+}
+
+/** A one-tap shift template on the shift form. */
+export interface ShiftPreset {
+  name: string
+  start: string
+  end: string
+  ot: boolean
+}
+
+/** A daily time window, "HH:MM" to "HH:MM" (may cross midnight). */
+export interface TimeWindow {
+  start: string
+  end: string
 }
 
 export interface PayRules {
@@ -29,6 +47,16 @@ export interface PayRules {
   statPremium: number
   /** Premium for stats marked double (e.g. 1.0 for Christmas = 2.0x total). */
   statPremiumDouble: number
+  /** Collective agreement windows used for shifts with clock times. */
+  eveningWindow: TimeWindow
+  nightWindow: TimeWindow
+  /** Weekend premium window: starts Friday at this time and lasts `weekendHours`. */
+  weekendStart: string
+  weekendHours: number
+  /** Paid hours for a regular (non-overtime) shift of exactly 12 clock hours. */
+  twelveHourPaid: number
+  shiftPresets: ShiftPreset[]
+  /** Estimates for shifts entered without clock times: */
   /** Evening-premium hours earned by a day shift. */
   eveningHoursPerDayShift: number
   /** Weekend-premium hours earned by a Friday day shift. */

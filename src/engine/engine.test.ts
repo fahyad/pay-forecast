@@ -9,6 +9,7 @@ import { incomeTaxCents } from './tax'
 import type { DeductionRules, PayRules, Settings, Shift, StatHoliday } from './types'
 
 const pay: PayRules = {
+  ...DEFAULT_SETTINGS.pay,
   baseRate: 40,
   eveningPremium: 2,
   nightPremium: 4,

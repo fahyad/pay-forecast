@@ -60,6 +60,13 @@ export const DEFAULT_SETTINGS: Settings = {
     otMultiplier: 2,
     statPremium: 0.5,
     statPremiumDouble: 1,
+    // Windows from the UNA-AHS provincial collective agreement (Article 28).
+    eveningWindow: { start: '15:00', end: '23:00' },
+    nightWindow: { start: '23:00', end: '07:00' },
+    weekendStart: '15:00',
+    weekendHours: 64,
+    twelveHourPaid: 11.63,
+    shiftPresets: [],
     eveningHoursPerDayShift: 0,
     fridayDayWeekendHours: 0,
     nightHoursBeforeMidnight: 0,
