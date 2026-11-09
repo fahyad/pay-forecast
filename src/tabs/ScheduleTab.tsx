@@ -1,4 +1,5 @@
 import { useState } from 'preact/hooks'
+import { shiftNetImpact } from '../engine/forecast'
 import { lineCents } from '../engine/money'
 import { addDays, periodForDate, periodInput, shiftHours } from '../engine/schedule'
 import type { Settings, Shift, ShiftType } from '../engine/types'
@@ -129,7 +130,7 @@ export function ScheduleTab({ settings, shifts, onChange, initialMonth, initialS
           {payDates.has(selected) && <p class="fine">Payday</p>}
           {dayShifts.length === 0 && <p class="fine">No shift scheduled.</p>}
           {dayShifts.map((s) => (
-            <ShiftDetail key={s.id} shift={s} settings={settings} onEdit={() => setEditing(s)} onDelete={() => remove(s.id)} />
+            <ShiftDetail key={s.id} shift={s} shifts={shifts} settings={settings} onEdit={() => setEditing(s)} onDelete={() => remove(s.id)} />
           ))}
           <button class={dayShifts.length ? '' : 'primary'} onClick={() => setEditing(newShift(selected))}>
             + Add {dayShifts.length ? 'another ' : ''}shift on this day
@@ -147,11 +148,19 @@ export function ScheduleTab({ settings, shifts, onChange, initialMonth, initialS
   )
 }
 
-export function ShiftDetail({ shift, settings, onEdit, onDelete }: { shift: Shift; settings: Settings; onEdit: () => void; onDelete: () => void }) {
+export function ShiftDetail({ shift, shifts, settings, onEdit, onDelete }: {
+  shift: Shift
+  /** All shifts, needed to work out what this one adds to net pay. */
+  shifts: Shift[]
+  settings: Settings
+  onEdit: () => void
+  onDelete: () => void
+}) {
   const h = shiftHours(shift, settings.pay, settings.stats)
   const period = periodForDate(shift.date, settings.periods)
   // Approximate: payroll rounds per pay period, so the cents can differ slightly from the stub.
   const gross = periodInput([shift], settings.pay, settings.stats).lines.reduce((t, l) => t + lineCents(l.hours, l.rate), 0)
+  const net = shiftNetImpact(settings, shifts, shift.id)
   const leaveHours = Object.values(h.leave).reduce((a, b) => a + (b ?? 0), 0)
   const rows: [string, number][] = [
     [shift.ot ? 'Overtime hours' : 'Base-rate hours', shift.ot ? h.ot : h.regular + h.statWorked + leaveHours],
@@ -176,8 +185,17 @@ export function ShiftDetail({ shift, settings, onEdit, onDelete }: { shift: Shif
             <tr key={label}><td>{label}</td><td>{fmtHours(v / 100)}</td></tr>
           ))}
           <tr class="total"><td>Earns (gross, approx.)</td><td>{fmtCents(gross)}</td></tr>
+          {net && <tr class="total"><td>Adds to net pay ({net.estimate ? 'estimate' : 'approx.'})</td><td>{fmtCents(net.total)}</td></tr>}
         </tbody>
       </table>
+      {net && (
+        <p class="fine">
+          Net = your take-home with this shift minus without it, using the tax deducted from that pay.
+          {Math.abs(net.later) >= 100 &&
+            ` ${fmtCents(net.ownPay)} on the ${fmtDate(net.payDate)} pay and ${fmtCents(net.later)} on later pays (CPP/EI timing).`}
+          {' '}Tax withheld on a large pay can be more than your actual annual tax; any difference comes back at tax time.
+        </p>
+      )}
       <p class="fine">
         {period
           ? `Pay period ${fmtDate(period.start, false)} – ${fmtDate(period.end, false)} · paid ${fmtDate(period.payDate)}`

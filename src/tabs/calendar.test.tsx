@@ -34,7 +34,7 @@ describe('calendar grid', () => {
 
 describe('shift details', () => {
   it('shows type, paid hours, premiums, stat split and pay date', () => {
-    const t = text(renderToString(<ShiftDetail shift={night} settings={settings} onEdit={() => {}} onDelete={() => {}} />))
+    const t = text(renderToString(<ShiftDetail shift={night} shifts={[night]} settings={settings} onEdit={() => {}} onDelete={() => {}} />))
     expect(t).toContain('Night shift')
     expect(t).toContain('12.00 paid hours')
     expect(t).toContain('Night differential hours 12.00')
@@ -46,7 +46,7 @@ describe('shift details', () => {
   })
 
   it('marks overtime', () => {
-    const t = text(renderToString(<ShiftDetail shift={{ ...night, ot: true }} settings={settings} onEdit={() => {}} onDelete={() => {}} />))
+    const t = text(renderToString(<ShiftDetail shift={{ ...night, ot: true }} shifts={[{ ...night, ot: true }]} settings={settings} onEdit={() => {}} onDelete={() => {}} />))
     expect(t).toContain('Overtime')
     expect(t).toContain('Overtime hours 12.00')
   })

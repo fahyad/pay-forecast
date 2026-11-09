@@ -1,7 +1,7 @@
 // Public tests: fictional rates, expected values worked independently of this code.
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_SETTINGS, TAX_YEAR_2026 } from './defaults'
-import { computeForecast } from './forecast'
+import { computeForecast, shiftNetImpact } from './forecast'
 import { lineCents, percentOf, roundDollarsToCents } from './money'
 import { computePeriodPay } from './payroll'
 import { periodInput, shiftHours } from './schedule'
@@ -172,5 +172,48 @@ describe('forecast', () => {
     expect(f.unassigned.map((s) => s.date)).toEqual(['2027-03-01'])
     expect(f.periods[1].pay).toBeNull()
     expect(f.periods[1].error).toMatch(/2027/)
+  })
+})
+
+describe('what one shift adds to net pay', () => {
+  const base: Settings = {
+    ...DEFAULT_SETTINGS,
+    pay,
+    deductions: ded,
+    periods: [
+      { id: 'A', start: '2026-10-05', end: '2026-10-18', payDate: '2026-10-28', benefitPay: true },
+      { id: 'B', start: '2026-10-19', end: '2026-11-01', payDate: '2026-11-10', benefitPay: false },
+    ],
+  }
+  const shifts = [
+    { ...shift('2026-10-06', 'day'), id: 'x' },
+    { ...shift('2026-10-07', 'night'), id: 'y' },
+    { ...shift('2026-10-20', 'day'), id: 'z' },
+  ]
+
+  it('is the net with the shift minus the net without it; all on its own pay once CPP/EI are maxed', () => {
+    const settings = { ...base, opening: { year: 2026, cpp: 4230.45, cpp2: 416, ei: 1123.07, pensionableEarnings: 90000 } }
+    const impact = shiftNetImpact(settings, shifts, 'y')!
+    const withNet = computeForecast(settings, shifts).periods[0].pay!.net
+    const withoutNet = computeForecast(settings, shifts.filter((s) => s.id !== 'y')).periods[0].pay!.net
+    expect(impact.total).toBe(withNet - withoutNet)
+    expect(impact.ownPay).toBe(impact.total)
+    expect(impact.later).toBe(0)
+    expect(impact.payDate).toBe('2026-10-28')
+    // Fixed costs (benefit premiums, levy) are paid either way, so they are not charged to the shift.
+    const gross = computeForecast(settings, [shifts[1]]).periods[0].pay!.gross
+    expect(impact.total).toBeGreaterThan(0)
+    expect(impact.total).toBeLessThan(gross)
+  })
+
+  it('shows CPP timing: using up the last CPP room now means less CPP on a later pay', () => {
+    const settings = { ...base, opening: { year: 2026, cpp: 4200, cpp2: 0, ei: 1123.07, pensionableEarnings: 60000 } }
+    const impact = shiftNetImpact(settings, shifts, 'y')!
+    expect(impact.later).toBeGreaterThan(0)
+    expect(impact.total).toBe(impact.ownPay + impact.later)
+  })
+
+  it('returns nothing for a shift outside every pay period', () => {
+    expect(shiftNetImpact(base, [{ ...shift('2027-05-01', 'day'), id: 'q' }], 'q')).toBeNull()
   })
 })

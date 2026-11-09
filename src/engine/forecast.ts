@@ -53,3 +53,37 @@ export function computeForecast(settings: Settings, shifts: Shift[]): Forecast {
   const unassigned = shifts.filter((s) => !periodForDate(s.date, periods))
   return { periods: results, unassigned }
 }
+
+export interface ShiftNetImpact {
+  /** Change in total net pay across the forecast from having this shift, in cents. */
+  total: number
+  /** The part that lands on the shift's own pay date. */
+  ownPay: number
+  /** The rest: later pays changed by year-to-date effects (e.g. CPP/EI maxing out sooner). */
+  later: number
+  payDate: string
+  /** The shift's pay uses tax-year values not yet confirmed. */
+  estimate: boolean
+}
+
+/**
+ * What one shift adds to take-home pay: the forecast with the shift minus the forecast without it.
+ * Unlike splitting a pay's net by share of gross, this reflects the tax deducted at the margin,
+ * whether CPP/EI are still being deducted, and leaves out per-pay fixed costs (benefits, levy).
+ * Exception: if this is the only paid shift in its period, those fixed costs count against it,
+ * because a period with no pay has no deductions at all.
+ */
+export function shiftNetImpact(settings: Settings, shifts: Shift[], shiftId: string): ShiftNetImpact | null {
+  const shift = shifts.find((s) => s.id === shiftId)
+  const period = shift && periodForDate(shift.date, settings.periods)
+  if (!shift || !period) return null
+  const withIt = computeForecast(settings, shifts).periods
+  const without = computeForecast(settings, shifts.filter((s) => s.id !== shiftId)).periods
+  const own = withIt.find((p) => p.period.id === period.id)
+  if (!own?.pay) return null
+  // Pays that cannot be calculated (no tax-year rates) contribute nothing either way.
+  const diff = withIt.map((p, i) => ({ id: p.period.id, cents: (p.pay?.net ?? 0) - (without[i].pay?.net ?? 0) }))
+  const total = diff.reduce((t, d) => t + d.cents, 0)
+  const ownPay = diff.find((d) => d.id === period.id)?.cents ?? 0
+  return { total, ownPay, later: total - ownPay, payDate: period.payDate, estimate: own.estimate }
+}
