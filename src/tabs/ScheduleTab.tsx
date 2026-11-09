@@ -117,10 +117,6 @@ export function ScheduleTab({ settings, shifts, onChange, initialMonth, initialS
             )
           })}
         </div>
-        <p class="cal-legend fine">
-          <span class="chip chip-day">D</span> day <span class="chip chip-evening">E</span> evening <span class="chip chip-night">N</span> night{' '}
-          <span class="chip chip-ot chip-day">OT</span> overtime · <span class="cal-pay-inline">$</span> payday · <span class="stat-dot" /> stat
-        </p>
       </section>
 
       {selected && (
@@ -188,14 +184,6 @@ export function ShiftDetail({ shift, shifts, settings, onEdit, onDelete }: {
           {net && <tr class="total"><td>Adds to net pay ({net.estimate ? 'estimate' : 'approx.'})</td><td>{fmtCents(net.total)}</td></tr>}
         </tbody>
       </table>
-      {net && (
-        <p class="fine">
-          Net = your take-home with this shift minus without it, using the tax deducted from that pay.
-          {Math.abs(net.later) >= 100 &&
-            ` ${fmtCents(net.ownPay)} on the ${fmtDate(net.payDate)} pay and ${fmtCents(net.later)} on later pays (CPP/EI timing).`}
-          {' '}Tax withheld on a large pay can be more than your actual annual tax; any difference comes back at tax time.
-        </p>
-      )}
       <p class="fine">
         {period
           ? `Pay period ${fmtDate(period.start, false)} – ${fmtDate(period.end, false)} · paid ${fmtDate(period.payDate)}`
