@@ -1,8 +1,9 @@
-import { useState } from 'preact/hooks'
+import { useEffect, useRef, useState } from 'preact/hooks'
 import type { Forecast, PeriodResult } from '../engine/forecast'
 import { fmtCents, fmtDate, fmtHours, todayIso } from '../format'
 
-export function PayTab({ forecast }: { forecast: Forecast }) {
+/** `focusId`: a pay to open and scroll to (from the Dashboard); otherwise the next pay starts open. */
+export function PayTab({ forecast, focusId }: { forecast: Forecast; focusId?: string }) {
   const today = todayIso()
   const next = forecast.periods.find((p) => p.period.payDate >= today)
   const years = [...new Set(forecast.periods.map((p) => p.taxYear))]
@@ -20,7 +21,7 @@ export function PayTab({ forecast }: { forecast: Forecast }) {
         </p>
       )}
       {forecast.periods.map((p) => (
-        <PayCard key={p.period.id} result={p} isNext={p === next} />
+        <PayCard key={p.period.id} result={p} isNext={p === next} focused={p.period.id === focusId} startOpen={focusId ? p.period.id === focusId : p === next} />
       ))}
       {years.map((y) => (
         <YearTotal key={y} year={y} periods={forecast.periods.filter((p) => p.taxYear === y)} />
@@ -29,11 +30,15 @@ export function PayTab({ forecast }: { forecast: Forecast }) {
   )
 }
 
-function PayCard({ result, isNext }: { result: PeriodResult; isNext: boolean }) {
-  const [open, setOpen] = useState(isNext)
+function PayCard({ result, isNext, focused, startOpen }: { result: PeriodResult; isNext: boolean; focused: boolean; startOpen: boolean }) {
+  const [open, setOpen] = useState(startOpen)
+  const ref = useRef<HTMLElement>(null)
+  useEffect(() => {
+    if (focused) ref.current?.scrollIntoView({ block: 'start' })
+  }, [])
   const { period, pay } = result
   return (
-    <section class={`card${isNext ? ' card-next' : ''}`}>
+    <section ref={ref} class={`card${isNext ? ' card-next' : ''}`}>
       <button class="card-head" onClick={() => setOpen(!open)} aria-expanded={open}>
         <span>
           <span class="card-title">{fmtDate(period.payDate)}</span>

@@ -85,3 +85,24 @@ export async function readBackupFile(file: File): Promise<AppData> {
 
 export const newId = (): string =>
   globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
+
+const SELECTION_KEY = 'pay-forecast-dashboard-selection'
+
+/** Dashboard pay-cycle selection, remembered per device (a convenience; losing it is harmless). */
+export function loadSelection(): string[] | null {
+  try {
+    const raw = localStorage.getItem(SELECTION_KEY)
+    const ids = raw ? JSON.parse(raw) : null
+    return Array.isArray(ids) && ids.every((x) => typeof x === 'string') ? ids : null
+  } catch {
+    return null
+  }
+}
+
+export function saveSelection(ids: string[]): void {
+  try {
+    localStorage.setItem(SELECTION_KEY, JSON.stringify(ids))
+  } catch {
+    // Storage unavailable (e.g. private browsing): the selection just isn't remembered.
+  }
+}

@@ -8,6 +8,8 @@ import { parseData } from './store'
 import { PayTab } from './tabs/PayTab'
 import { ScheduleTab, ShiftDetail } from './tabs/ScheduleTab'
 import { SetupTab } from './tabs/SetupTab'
+import { DashboardTab } from './tabs/DashboardTab'
+import { fmtDollars } from './format'
 
 const FILE = new URL('../private/import.private.json', import.meta.url)
 const raw = existsSync(FILE) ? JSON.parse(readFileSync(FILE, 'utf8')) : null
@@ -42,6 +44,17 @@ describe.skipIf(!raw)('private render check', () => {
       expect(t).toContain(`${fmtHours(s.hours)} paid hours`)
       expect(t).toMatch(/paid [A-Z][a-z]{2} \d+, \d{4}/)
       expect(t).toMatch(/Adds to net pay \((approx\.|estimate)\) \$/)
+    }
+  })
+
+  it('Dashboard shows every selected pay with its net, and a heatmap square for each worked day', () => {
+    const ids = data!.settings.periods.map((p) => p.id)
+    const html = renderToString(<DashboardTab settings={data!.settings} shifts={data!.shifts} selected={ids} onSelect={() => {}} onOpenPay={() => {}} />)
+    const t = text(html)
+    for (const p of forecast!.periods) expect(t).toContain(fmtDollars(p.pay!.net))
+    expect(t).toContain(fmtDollars(forecast!.periods.reduce((s, p) => s + p.pay!.net, 0)))
+    for (const s of data!.shifts.filter((x) => ['day', 'evening', 'night'].includes(x.type))) {
+      expect(html).toContain(`${fmtHours(s.hours)} h${s.ot ? ' OT' : ''}`)
     }
   })
 

@@ -11,6 +11,12 @@
   --danger: #c0392b;
   --badge: #e8e1f7;
   --badge-text: #4a3b7a;
+  --ot: #c97408;
+  --tile: #f2f2f7;
+  --heat-empty: #e5e5ea;
+  --heat-reg: #0a6e5c;
+  --heat-ot: #f39c12;
+  --heat-leave: #a1a1a6;
   color-scheme: light dark;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 16px;
@@ -30,6 +36,12 @@
     --warn-text: #ffd48a;
     --badge: #3a3150;
     --badge-text: #d6ccf5;
+    --ot: #f5a524;
+    --tile: #2c2c2e;
+    --heat-empty: #2c2c2e;
+    --heat-reg: #3ccfb0;
+    --heat-ot: #f5a524;
+    --heat-leave: #9a9aa0;
   }
 }
 
@@ -61,6 +73,7 @@ body { min-height: 100vh; }
 .stack { display: flex; flex-direction: column; gap: 12px; }
 .card { background: var(--card); border-radius: 14px; padding: 12px 14px; }
 .card-next { outline: 2px solid var(--accent); }
+.card { scroll-margin-top: calc(env(safe-area-inset-top) + 64px); }
 .card h3 { margin: 0 0 8px; font-size: 17px; }
 .card-head {
   width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px;
@@ -167,3 +180,49 @@ h4 { margin: 16px 0 4px; font-size: 15px; }
 .grow { flex: 1; }
 .period-row { border-top: 1px solid var(--line); padding: 8px 0; }
 .form .row { margin-top: 10px; }
+
+/* Dashboard */
+.dash { display: flex; flex-direction: column; }
+.paychips { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 12px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.paychips::-webkit-scrollbar { display: none; }
+.paychip { flex: none; border-radius: 18px; padding: 8px 12px; min-height: 40px; font-size: 15px; border: 1px solid var(--line); background: var(--card); }
+.paychip.on { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+.paychip-est { font-size: 10px; margin-left: 4px; opacity: 0.8; }
+.ot-text { color: var(--ot); }
+
+.heat { background: var(--card); border-radius: 14px; padding: 8px 10px 6px; margin-bottom: 10px; }
+.heat-grid { display: flex; gap: 7px; justify-content: center; }
+.heat-days { display: grid; grid-template-rows: repeat(7, 11px); gap: 2px; font-size: 8px; color: var(--muted); padding-right: 1px; }
+.heat-days span { line-height: 11px; }
+.heat-cycle { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.heat-cols { display: grid; grid-template-rows: repeat(7, 11px); grid-auto-columns: 11px; gap: 2px; }
+.heat .cell { width: 11px; height: 11px; min-height: 0; border-radius: 3px; background: var(--heat-empty); border: 0; padding: 0; }
+.heat .cell.regular { background: var(--heat-reg); }
+.heat .cell.overtime { background: var(--heat-ot); }
+.heat .cell.leave { background: var(--heat-leave); }
+.heat .cell.today { box-shadow: 0 0 0 1.5px var(--text); }
+.heat .cell.sel { box-shadow: 0 0 0 1.5px var(--accent); }
+.heat-label { font-size: 9px; color: var(--muted); font-weight: 600; white-space: nowrap; }
+.heat-info { font-size: 11px; color: var(--muted); text-align: center; min-height: 14px; margin-top: 5px; }
+.heat-info b { color: var(--text); font-weight: 600; }
+
+.dash-total { background: var(--card); border-radius: 16px; padding: 18px 16px; margin-bottom: 12px; }
+.dash-total-label { font-size: 13px; color: var(--muted); }
+.dash-total-net { font-size: 40px; font-weight: 800; letter-spacing: -0.5px; margin: 2px 0 14px; }
+.dash-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.dash-tile { background: var(--tile); border-radius: 12px; padding: 10px 12px; }
+.dash-tile .k { font-size: 13px; color: var(--muted); }
+.dash-tile .v { font-size: 22px; font-weight: 700; margin-top: 2px; }
+.dash-tile .s { font-size: 13px; color: var(--muted); margin-top: 1px; }
+.dash-tile.ot .v { color: var(--ot); }
+
+.dash-list { background: var(--card); border-radius: 16px; overflow: hidden; }
+.dash-row {
+  width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 12px; text-align: left;
+  padding: 14px 16px; border: 0; border-radius: 0; background: none; min-height: 60px;
+}
+.dash-row + .dash-row { border-top: 1px solid var(--line); }
+.dash-row > span:first-child { display: flex; flex-direction: column; }
+.dash-row-date { font-size: 17px; font-weight: 600; }
+.dash-row-meta { font-size: 14px; color: var(--muted); margin-top: 3px; }
+.dash-row-amt { font-size: 20px; font-weight: 700; white-space: nowrap; }

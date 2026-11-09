@@ -38,3 +38,23 @@ export const SHIFT_TYPE_LABELS: Record<string, string> = {
   floaterStat: 'Floater stat',
   unpaid: 'Unpaid',
 }
+
+const dollars = new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 })
+
+/** Cents to whole dollars, rounded half-up from the exact cents: 185150 -> "$1,852". */
+export const fmtDollars = (cents: number): string => dollars.format(Math.sign(cents) * Math.round(Math.abs(cents) / 100))
+
+const LEAVE_WORDS: Record<string, string> = {
+  sick: 'sick',
+  statHoliday: 'stat holiday',
+  vacation: 'vacation',
+  orientation: 'orientation',
+  personalLeave: 'personal leave',
+  floaterStat: 'floater stat',
+}
+
+/** { sick: 1, vacation: 2 } -> ["1 sick", "2 vacation"]. */
+export const leaveParts = (leave: Partial<Record<string, number>>): string[] =>
+  Object.entries(leave)
+    .filter(([, n]) => (n ?? 0) > 0)
+    .map(([k, n]) => `${n} ${LEAVE_WORDS[k] ?? k}`)
