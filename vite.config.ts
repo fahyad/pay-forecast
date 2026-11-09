@@ -6,6 +6,6 @@ export default defineConfig({
   base: '/pay-forecast/',
   plugins: [preact()],
   test: {
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
   },
 })

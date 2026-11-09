@@ -1,6 +1,6 @@
-# Pay Forecast PWA — Plan
+# Pay Forecast — Plan
 
-A small offline web app (installable on iPhone) for a nurse paid biweekly: enter shifts, see the
+A small web app (used in Safari on iPhone, not installed) for a nurse paid biweekly: enter shifts, see the
 projected net pay for each pay date. It replaces a Google Sheet; there is no sync.
 
 ## Principles
@@ -72,8 +72,9 @@ projected net pay for each pay date. It replaces a Google Sheet; there is no syn
 
 ## Tech
 
-Vite + TypeScript + Preact, `vite-plugin-pwa` (installable, offline), IndexedDB for storage,
-Vitest for tests. Hosted on GitHub Pages.
+Vite + TypeScript + Preact, IndexedDB for storage, Vitest for tests. Hosted on GitHub Pages.
+Not installable (no manifest or service worker), by choice. Safari can clear a site's data after 7 days
+unused, so the Setup tab reminds the user to export backups.
 
 ## Build order
 
@@ -81,9 +82,9 @@ Vitest for tests. Hosted on GitHub Pages.
 2. Calculation engine + tests (done only when the private stub check matches to the cent).
 3. Storage + backup (export/import).
 4. Setup screen, then Schedule, then Pay.
-5. PWA: icons, manifest, offline; iPhone "Add to Home Screen" check.
+5. Check every screen in a browser at phone width.
 6. Private import file built from the current sheet; check forecasts match the sheet.
-7. Deploy to GitHub Pages and install on the phone.
+7. Deploy to GitHub Pages and open it on the phone.
 
 ## Open items
 

@@ -1,104 +1,68 @@
-import { useState } from 'preact/hooks'
-import heroImg from './assets/hero.png'
-import preactLogo from './assets/preact.svg'
-import viteLogo from './assets/vite.svg'
-import './app.css'
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
+import { computeForecast } from './engine/forecast'
+import type { Settings, Shift } from './engine/types'
+import { type AppData, loadData, requestPersistence, saveData } from './store'
+import { PayTab } from './tabs/PayTab'
+import { ScheduleTab } from './tabs/ScheduleTab'
+import { SetupTab } from './tabs/SetupTab'
+
+type Tab = 'schedule' | 'pay' | 'setup'
+const TABS: { id: Tab; label: string; icon: string }[] = [
+  { id: 'schedule', label: 'Schedule', icon: '📅' },
+  { id: 'pay', label: 'Pay', icon: '💵' },
+  { id: 'setup', label: 'Setup', icon: '⚙️' },
+]
 
 export function App() {
-  const [count, setCount] = useState(0)
+  const [data, setData] = useState<AppData | null>(null)
+  const [tab, setTab] = useState<Tab>('pay')
+  const [saveError, setSaveError] = useState('')
+  const loaded = useRef(false)
+
+  useEffect(() => {
+    loadData().then((d) => {
+      setData(d)
+      loaded.current = true
+      if (d.settings.periods.length === 0) setTab('setup')
+    })
+    void requestPersistence()
+  }, [])
+
+  // Save every change; a short delay batches rapid typing.
+  useEffect(() => {
+    if (!data || !loaded.current) return
+    const t = setTimeout(() => {
+      saveData(data).then(() => setSaveError(''), (e: Error) => setSaveError(`Could not save: ${e.message}`))
+    }, 300)
+    return () => clearTimeout(t)
+  }, [data])
+
+  const forecast = useMemo(() => (data ? computeForecast(data.settings, data.shifts) : null), [data])
+
+  if (!data || !forecast) return <p class="empty">Loading…</p>
+
+  const setSettings = (settings: Settings) => setData({ ...data, settings })
+  const setShifts = (shifts: Shift[]) => setData({ ...data, shifts })
 
   return (
-    <>
-      <section id="center">
-        <div class="hero">
-          <img src={heroImg} class="base" width="170" height="179" alt="" />
-          <img src={preactLogo} class="framework" alt="Preact logo" />
-          <img src={viteLogo} class="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/app.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          class="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div class="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg class="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img class="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://preactjs.com/" target="_blank">
-                <img class="button-icon" src={preactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg class="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg class="button-icon" role="presentation" aria-hidden="true">
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg class="button-icon" role="presentation" aria-hidden="true">
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg class="button-icon" role="presentation" aria-hidden="true">
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg class="button-icon" role="presentation" aria-hidden="true">
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div class="ticks"></div>
-      <section id="spacer"></section>
-    </>
+    <div class="app">
+      <header class="top">
+        <h1>{TABS.find((t) => t.id === tab)!.label}</h1>
+      </header>
+      {saveError && <p class="warn">{saveError}</p>}
+      <main>
+        {tab === 'schedule' && <ScheduleTab settings={data.settings} shifts={data.shifts} onChange={setShifts} />}
+        {tab === 'pay' && <PayTab forecast={forecast} />}
+        {tab === 'setup' && <SetupTab data={data} onSettings={setSettings} onReplaceAll={setData} />}
+      </main>
+      <nav class="tabbar">
+        {TABS.map((t) => (
+          <button key={t.id} class={tab === t.id ? 'active' : ''} onClick={() => setTab(t.id)} aria-current={tab === t.id}>
+            <span class="tab-icon" aria-hidden="true">{t.icon}</span>
+            {t.label}
+          </button>
+        ))}
+      </nav>
+    </div>
   )
 }
