@@ -3,10 +3,10 @@ import { existsSync, readFileSync } from 'node:fs'
 import { renderToString } from 'preact-render-to-string'
 import { describe, expect, it } from 'vitest'
 import { computeForecast } from './engine/forecast'
-import { fmtDate, fmtDayDate } from './format'
+import { fmtHours, SHIFT_TYPE_LABELS } from './format'
 import { parseData } from './store'
 import { PayTab } from './tabs/PayTab'
-import { ScheduleTab } from './tabs/ScheduleTab'
+import { ScheduleTab, ShiftDetail } from './tabs/ScheduleTab'
 import { SetupTab } from './tabs/SetupTab'
 
 const FILE = new URL('../private/import.private.json', import.meta.url)
@@ -29,12 +29,19 @@ describe.skipIf(!raw)('private render check', () => {
     console.log(t.slice(0, 600))
   })
 
-  it('Schedule tab shows every shift under its pay period', () => {
-    const t = text(renderToString(<ScheduleTab settings={data!.settings} shifts={data!.shifts} onChange={() => {}} />))
-    expect(t).toContain('+ Add shift')
-    for (const p of data!.settings.periods) expect(t).toContain(`paid ${fmtDate(p.payDate)}`)
-    for (const s of data!.shifts) expect(t).toContain(fmtDayDate(s.date))
-    expect(t).not.toContain('Not in any pay period')
+  it('Schedule calendar shows every shift in its month, and each shift opens its details', () => {
+    const months = [...new Set(data!.shifts.map((s) => s.date.slice(0, 7)))]
+    for (const month of months) {
+      const html = renderToString(<ScheduleTab settings={data!.settings} shifts={data!.shifts} onChange={() => {}} initialMonth={month} />)
+      for (const s of data!.shifts.filter((x) => x.date.startsWith(month))) {
+        expect(html).toContain(`${SHIFT_TYPE_LABELS[s.type]} ${fmtHours(s.hours)} hours${s.ot ? ' overtime' : ''}`)
+      }
+    }
+    for (const s of data!.shifts) {
+      const t = text(renderToString(<ShiftDetail shift={s} settings={data!.settings} onEdit={() => {}} onDelete={() => {}} />))
+      expect(t).toContain(`${fmtHours(s.hours)} paid hours`)
+      expect(t).toMatch(/paid [A-Z][a-z]{2} \d+, \d{4}/)
+    }
   })
 
   it('Setup tab renders every section', () => {
